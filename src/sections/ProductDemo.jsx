@@ -2,7 +2,22 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 import ScrambleText from '../components/ScrambleText'
-import { playLockdownSound, playSuccessSound } from '../lib/synth'
+import { playLockdownSound, playSuccessSound, playTransitionSound, playHoverSound } from '../lib/synth'
+
+
+function TypewriterLog({ text, className }) {
+  const [displayedText, setDisplayedText] = React.useState('')
+  React.useEffect(() => {
+    let i = 0
+    const interval = setInterval(() => {
+      setDisplayedText(text.substring(0, i + 1))
+      i++
+      if (i >= text.length) clearInterval(interval)
+    }, 15)
+    return () => clearInterval(interval)
+  }, [text])
+  return <div className={className}>{displayedText}</div>
+}
 
 export const PRODUCTS = [
   {
@@ -195,9 +210,7 @@ function ShieldDeskSandbox() {
         </div>
         <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-2 max-h-[220px]">
           {logs.map((log, index) => (
-            <div key={index} className={log.includes('ALERT') || log.includes('CRITICAL') ? 'text-red-400 font-bold' : log.includes('SCAN') ? 'text-accent-gold' : 'text-beige-300'}>
-              {log}
-            </div>
+            <TypewriterLog key={index} className={log.includes('ALERT') || log.includes('CRITICAL') ? 'text-red-400 font-bold' : log.includes('SCAN') ? 'text-accent-gold' : 'text-beige-300'} text={log} />
           ))}
           {scanning && <div className="text-accent-gold animate-pulse">Scanning ports in progress...</div>}
         </div>
@@ -329,9 +342,7 @@ function VmpSandbox() {
           <span className="text-[10px] uppercase tracking-wider text-beige-300 border-b border-white/5 pb-1">VMP Log Stream</span>
           <div className="flex-1 overflow-y-auto max-h-[140px] flex flex-col gap-1.5 text-[9px] text-beige-300">
             {logs.map((log, index) => (
-              <div key={index} className={log.includes('WARNING') ? 'text-red-400 font-bold' : log.includes('FILTER') ? 'text-accent-gold' : 'text-beige-300/70'}>
-                {log}
-              </div>
+              <TypewriterLog key={index} className={log.includes('WARNING') ? 'text-red-400 font-bold' : log.includes('FILTER') ? 'text-accent-gold' : 'text-beige-300/70'} text={log} />
             ))}
           </div>
         </div>
@@ -1235,8 +1246,35 @@ function ProductBay({ product, setSandboxProduct, i }) {
   const y = useTransform(scrollYProgress, [0, 1], ["20%", "-20%"])
   const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0])
 
+  // 3D Tilt effect
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+  
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [10, -10]), { damping: 30, stiffness: 200 })
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-10, 10]), { damping: 30, stiffness: 200 })
+
+  const handleMouseMove = (e) => {
+    if (!containerRef.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    mouseX.set(x / rect.width - 0.5)
+    mouseY.set(y / rect.height - 0.5)
+  }
+
+  const handleMouseLeave = () => {
+    mouseX.set(0)
+    mouseY.set(0)
+  }
+
   return (
-    <div ref={containerRef} className="relative w-full h-[150vh] pointer-events-auto">
+    <div 
+      ref={containerRef} 
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="relative w-full h-[150vh] pointer-events-auto"
+      style={{ perspective: 1200 }}
+    >
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
         {/* Deep background color */}
         <div className="absolute inset-0 z-0 bg-bg-deep">
@@ -1259,8 +1297,8 @@ function ProductBay({ product, setSandboxProduct, i }) {
 
         {/* Specs Text Sliding Overlay */}
         <motion.div 
-          style={{ y, opacity }}
-          className="relative z-10 w-full max-w-[1400px] px-6 md:px-16 lg:px-24 flex flex-col md:flex-row gap-8 lg:gap-16 items-center justify-center"
+          style={{ y, opacity, rotateX, rotateY }}
+          className="relative z-10 w-full max-w-[1400px] px-6 md:px-16 lg:px-24 flex flex-col md:flex-row gap-8 lg:gap-16 items-center justify-center transform-gpu"
         >
           {/* Watermark Badge behind content */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[-1] hidden md:block">
@@ -1281,7 +1319,9 @@ function ProductBay({ product, setSandboxProduct, i }) {
               <span className="font-number text-5xl md:text-6xl text-accent-gold opacity-80 drop-shadow-[0_0_15px_rgba(201,168,76,0.3)]">{product.badge}</span>
               <div className="flex flex-col">
                 <span className="font-mono text-[10px] text-accent-gold tracking-widest uppercase">{product.tagline}</span>
-                <h3 className="font-display text-3xl md:text-5xl font-bold text-white uppercase tracking-tight">{product.label}</h3>
+                <h3 className="font-display text-3xl md:text-5xl font-bold text-white uppercase tracking-tight">
+                  <ScrambleText text={product.label} />
+                </h3>
               </div>
             </div>
             
@@ -1298,7 +1338,13 @@ function ProductBay({ product, setSandboxProduct, i }) {
             </div>
 
             <button 
-              onClick={() => setSandboxProduct(product)}
+              onMouseEnter={() => {
+                if (typeof playHoverSound === 'function') playHoverSound()
+              }}
+              onClick={() => {
+                if (typeof playTransitionSound === 'function') playTransitionSound()
+                setSandboxProduct(product)
+              }}
               className="mt-6 self-start group relative overflow-hidden border border-accent-gold bg-transparent px-8 py-4 font-mono text-[10px] tracking-widest uppercase text-accent-gold transition-all duration-300 hover:scale-105"
             >
               <div className="absolute inset-0 bg-accent-gold translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-out" />
