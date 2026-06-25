@@ -2,7 +2,17 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 import ScrambleText from '../components/ScrambleText'
+import Magnetic from '../components/Magnetic'
 import { playLockdownSound, playSuccessSound, playTransitionSound, playHoverSound } from '../lib/synth'
+
+const CyberReticle = () => (
+  <motion.svg animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} width="120" height="120" viewBox="0 0 120 120" className="opacity-20 pointer-events-none">
+    <circle cx="60" cy="60" r="50" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="4 8" />
+    <circle cx="60" cy="60" r="40" fill="none" stroke="currentColor" strokeWidth="0.5" />
+    <path d="M60 0v20M60 100v20M0 60h20M100 60h20" stroke="currentColor" strokeWidth="1.5" />
+  </motion.svg>
+)
+
 
 
 function TypewriterLog({ text, className }) {
@@ -1269,6 +1279,7 @@ function ProductBay({ product, setSandboxProduct, i }) {
 
   return (
     <div 
+      id={`console-${i}`}
       ref={containerRef} 
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -1278,12 +1289,20 @@ function ProductBay({ product, setSandboxProduct, i }) {
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
         {/* Deep background color */}
         <div className="absolute inset-0 z-0 bg-bg-deep">
-          {/* Subtle Image Backdrop */}
-          <motion.img 
-            style={{ scale: 1.1, opacity: 0.15 }}
-            src={product.image} 
-            className="w-full h-full object-cover mix-blend-luminosity"
-          />
+          {/* Subtle Image Backdrop with Clip-path reveal */}
+          <motion.div 
+            initial={{ clipPath: "circle(0% at 50% 50%)" }}
+            whileInView={{ clipPath: "circle(100% at 50% 50%)" }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+            className="w-full h-full absolute inset-0"
+          >
+            <motion.img 
+              style={{ scale: 1.1, opacity: 0.15 }}
+              src={product.image} 
+              className="w-full h-full object-cover mix-blend-luminosity"
+            />
+          </motion.div>
           {/* Dynamic Ambient Glow Orb */}
           <motion.div 
             style={{ 
@@ -1300,6 +1319,10 @@ function ProductBay({ product, setSandboxProduct, i }) {
           style={{ y, opacity, rotateX, rotateY }}
           className="relative z-10 w-full max-w-[1400px] px-6 md:px-16 lg:px-24 flex flex-col md:flex-row gap-8 lg:gap-16 items-center justify-center transform-gpu"
         >
+          {/* SVG Cyber Reticle */}
+          <div className="absolute top-10 left-10 text-accent-gold pointer-events-none hidden lg:block">
+            <CyberReticle />
+          </div>
           {/* Watermark Badge behind content */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[-1] hidden md:block">
             <span className="font-number text-[20vw] text-accent-gold/5 leading-none">{product.badge}</span>
@@ -1344,29 +1367,31 @@ function ProductBay({ product, setSandboxProduct, i }) {
               ))}
             </div>
 
-            <button 
-              onMouseEnter={() => {
-                if (typeof playHoverSound === 'function') playHoverSound()
-              }}
-              onClick={() => {
-                if (typeof playTransitionSound === 'function') playTransitionSound()
-                setSandboxProduct(product)
-              }}
-              className="mt-6 self-start group relative overflow-hidden border border-accent-gold bg-transparent px-8 py-4 font-mono text-[10px] tracking-widest uppercase text-accent-gold transition-all duration-300 hover:scale-105"
-            >
-              <div className="absolute inset-0 bg-accent-gold translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-              <span className="relative z-10 group-hover:text-bg-deep font-bold transition-colors duration-300 flex items-center gap-3">
-                Access Console
-                <span className="w-1.5 h-1.5 rounded-full bg-accent-gold group-hover:bg-bg-deep animate-pulse" />
-              </span>
-            </button>
+            <Magnetic strength={0.3}>
+              <button 
+                onMouseEnter={() => {
+                  if (typeof playHoverSound === 'function') playHoverSound()
+                }}
+                onClick={() => {
+                  if (typeof playTransitionSound === 'function') playTransitionSound()
+                  setSandboxProduct(product)
+                }}
+                className="mt-6 self-start group relative overflow-hidden border border-accent-gold bg-transparent px-8 py-4 font-mono text-[10px] tracking-widest uppercase text-accent-gold transition-all duration-300 hover:scale-105"
+              >
+                <div className="absolute inset-0 bg-accent-gold translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                <span className="relative z-10 group-hover:text-bg-deep font-bold transition-colors duration-300 flex items-center gap-3">
+                  Access Console
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent-gold group-hover:bg-bg-deep animate-pulse" />
+                </span>
+              </button>
+            </Magnetic>
           </motion.div>
 
           <motion.div 
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, x: 50, clipPath: "inset(0 100% 0 0)" }}
+            whileInView={{ opacity: 1, x: 0, clipPath: "inset(0 0% 0 0)" }}
             viewport={{ once: true, margin: "-10%" }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+            transition={{ duration: 1, ease: [0.77, 0, 0.175, 1], delay: 0.2 }}
             className="flex-1 w-full flex items-center justify-center md:-ml-8 lg:-ml-16 z-20"
           >
             <div className="relative w-full max-w-[600px] aspect-video border border-white/20 liquid-glass-panel p-2 flex flex-col gap-2 bg-black/40 backdrop-blur-md shadow-2xl shadow-black/80 group">
@@ -1393,10 +1418,51 @@ function ProductBay({ product, setSandboxProduct, i }) {
 
 export default function ProductDemo() {
   const [sandboxProduct, setSandboxProduct] = useState(null)
+  
+  // Track active section for sidebar
+  const [activeConsole, setActiveConsole] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = document.querySelectorAll('[id^="console-"]')
+      sections.forEach((sec, idx) => {
+        const rect = sec.getBoundingClientRect()
+        // If the section is currently sticky taking up the screen
+        if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+          setActiveConsole(idx)
+        }
+      })
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const scrollToConsole = (idx) => {
+    const target = document.getElementById(`console-${idx}`)
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
 
   return (
     <section id="products" className="relative z-10 w-full flex flex-col pointer-events-auto bg-bg-deep">
       
+      {/* Dynamic Navigation Sidebar */}
+      <div className="fixed right-6 top-1/2 -translate-y-1/2 z-50 hidden xl:flex flex-col gap-4">
+        {PRODUCTS.map((p, idx) => (
+          <button
+            key={p.id}
+            onClick={() => scrollToConsole(idx)}
+            className={`w-2 h-2 rounded-full transition-all duration-300 flex items-center justify-center group ${activeConsole === idx ? 'bg-accent-gold scale-150' : 'bg-white/20 hover:bg-white/50'}`}
+          >
+            {/* Tooltip on hover */}
+            <span className="absolute right-6 opacity-0 group-hover:opacity-100 transition-opacity font-mono text-[9px] text-accent-gold tracking-widest uppercase bg-bg-deep/80 px-2 py-1 rounded whitespace-nowrap pointer-events-none">
+              {p.label}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {/* Header */}
       <div className="sticky top-0 z-20 w-full px-6 md:px-16 lg:px-24 pt-24 pb-8 bg-gradient-to-b from-bg-deep to-transparent pointer-events-none">
         <div className="max-w-[1400px] w-full mx-auto flex flex-col gap-4">
