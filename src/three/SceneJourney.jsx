@@ -1,49 +1,124 @@
 import React, { useRef, useMemo, useEffect, useState } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
-import { Environment, MeshTransmissionMaterial, Float } from '@react-three/drei'
+import { useFrame } from '@react-three/fiber'
+import { Environment, MeshTransmissionMaterial } from '@react-three/drei'
 import { EffectComposer, Bloom, DepthOfField } from '@react-three/postprocessing'
 import * as THREE from 'three'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import CameraRig from './CameraRig'
+import { useVaultStore } from '../store/useVaultStore'
 
-function AbstractShape({ position, rotation, geometry, material, speed, phase, color }) {
+
+gsap.registerPlugin(ScrollTrigger)
+
+function HexIrisPanel({ index, material }) {
   const groupRef = useRef()
+  const { grantAccess, accessGranted } = useVaultStore()
+  const angle = (index * Math.PI * 2) / 6
+  
+  // Animation state
+  const [openProgress, setOpenProgress] = useState(0)
 
-  useFrame(({ clock }) => {
+  // Create a triangular panel
+  const geometry = useMemo(() => {
+    const shape = new THREE.Shape()
+    shape.moveTo(0, 0)
+    shape.lineTo(2.5, 4.33)
+    shape.lineTo(-2.5, 4.33)
+    shape.lineTo(0, 0)
+
+    const extrudeSettings = { depth: 0.2, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 2 }
+    const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings)
+    geo.center()
+    return geo
+  }, [])
+
+  useEffect(() => {
+    // Fixed 4-second animation to open the iris
+    const tl = gsap.to({ p: 0 }, {
+      p: 1,
+      duration: 3.5, // 3.5 seconds opening
+      delay: 0.5, // Wait a moment before opening
+      ease: 'power3.inOut',
+      onUpdate: function() {
+        setOpenProgress(this.targets()[0].p)
+      },
+      onComplete: () => {
+        if (index === 0 && !accessGranted) {
+          grantAccess() // Unlock scroll and parallax
+        }
+      }
+    })
+    return () => tl.kill()
+  }, [index, accessGranted, grantAccess])
+
+  useFrame(() => {
     if (!groupRef.current) return
-    const t = clock.getElapsedTime()
-    // Slow drift
-    groupRef.current.position.y = position[1] + Math.sin(t * speed + phase) * 0.2
-    // Continuous rotation
-    groupRef.current.rotation.x += 0.001 * speed
-    groupRef.current.rotation.z += 0.002 * speed
+    
+    // Iris opens by translating outward and rotating slightly
+    const openDist = openProgress * 8
+    const rot = openProgress * Math.PI * 0.5
+
+    groupRef.current.position.x = Math.cos(angle) * (1.5 + openDist)
+    groupRef.current.position.y = Math.sin(angle) * (1.5 + openDist)
+    
+    // Counter-rotate as they open
+    groupRef.current.rotation.z = angle + Math.PI / 2 + (index % 2 === 0 ? rot : -rot)
   })
 
   return (
-    <group ref={groupRef} position={position} rotation={rotation}>
-      {/* Glass Inner Shape */}
-      <mesh geometry={geometry}>
-        {material}
-      </mesh>
-      {/* Sci-fi wireframe shell scaled slightly up */}
-      <mesh geometry={geometry} scale={1.03}>
-        <meshBasicMaterial 
-          color={color} 
-          wireframe 
-          transparent 
-          opacity={0.12} 
-        />
-      </mesh>
+    <mesh ref={groupRef} geometry={geometry}>
+      {material}
+      {/* Edge highlight */}
+      <lineSegments>
+        <edgesGeometry args={[geometry]} />
+        <lineBasicMaterial color="#00FF9D" transparent opacity={0.3} />
+      </lineSegments>
+    </mesh>
+  )
+}
+
+function HexIris() {
+  const materialGold = useMemo(() => <MeshTransmissionMaterial color="#C9A84C" roughness={0.1} thickness={2} ior={1.5} transmission={0.9} resolution={256} samples={4} />, [])
+  const groupRef = useRef()
+
+  return (
+    <group ref={groupRef} position={[0, 0, 2]}>
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <HexIrisPanel key={i} index={i} material={materialGold} />
+      ))}
     </group>
   )
 }
 
-function Particles({ count = 120 }) {
+function VaultWalls() {
+  // Placeholder vault geometry. We'll extend this in other files.
+  return (
+    <group>
+      {/* Create levels of the vault as massive rings/shafts */}
+      {Array.from({ length: 15 }).map((_, i) => (
+        <mesh key={i} position={[0, -i * 5 + 5, -i * 2 - 5]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[18, 1, 16, 64]} />
+          <meshStandardMaterial color="#08140C" metalness={0.8} roughness={0.2} />
+          {/* Neon accent rings */}
+          <mesh position={[0, 0, 1.1]}>
+            <torusGeometry args={[17.5, 0.05, 16, 64]} />
+            <meshBasicMaterial color={i % 2 === 0 ? "#C9A84C" : "#00FF9D"} transparent opacity={0.4} />
+          </mesh>
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function Particles({ count = 300 }) {
   const pointsRef = useRef()
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3)
     for (let i = 0; i < count; i++) {
       pos[i * 3] = (Math.random() - 0.5) * 35
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 35
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 15 - 5
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 50 // Spread vertically for the descent
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 40 - 15 // Spread along Z for the new flight path
     }
     return pos
   }, [count])
@@ -51,7 +126,6 @@ function Particles({ count = 120 }) {
   useFrame((state) => {
     if (pointsRef.current) {
       pointsRef.current.rotation.y = state.clock.getElapsedTime() * 0.015
-      pointsRef.current.rotation.x = state.clock.getElapsedTime() * 0.008
     }
   })
 
@@ -74,113 +148,23 @@ function Particles({ count = 120 }) {
   )
 }
 
-function Grid3D() {
-  const planeRef = useRef()
-  useFrame((state) => {
-    if (planeRef.current) {
-      planeRef.current.rotation.z = state.clock.getElapsedTime() * 0.01
-    }
-  })
-  return (
-    <mesh ref={planeRef} position={[0, -12, -8]} rotation={[-Math.PI / 2.3, 0, 0]}>
-      <planeGeometry args={[120, 120, 40, 40]} />
-      <meshBasicMaterial color="#1E3D27" wireframe transparent opacity={0.12} />
-    </mesh>
-  )
-}
-
 export default function SceneJourney() {
   const groupRef = useRef()
-  const { viewport } = useThree()
-  
-  // Track mouse for parallax
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 2 - 1,
-        y: -(e.clientY / window.innerHeight) * 2 + 1
-      })
-    }
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [])
-
-  // Create geometric objects for the background journey
-  const shapes = useMemo(() => {
-    const items = []
-    const geos = [
-      new THREE.IcosahedronGeometry(1.5, 0),
-      new THREE.TorusKnotGeometry(1.2, 0.4, 64, 8),
-      new THREE.OctahedronGeometry(1.2, 0),
-      new THREE.TetrahedronGeometry(1.5, 0),
-      new THREE.SphereGeometry(1, 32, 32)
-    ]
-
-    for (let i = 0; i < 8; i++) {
-      const geo = geos[Math.floor(Math.random() * geos.length)]
-      items.push({
-        id: i,
-        geometry: geo,
-        position: [
-          (Math.random() - 0.5) * viewport.width * 1.5,
-          -Math.random() * viewport.height * 2 + viewport.height / 2, 
-          (Math.random() - 0.5) * 8 - 4,
-        ],
-        rotation: [Math.random() * Math.PI, Math.random() * Math.PI, 0],
-        speed: 0.1 + Math.random() * 0.4,
-        phase: Math.random() * Math.PI * 2,
-        color: Math.random() > 0.3 ? '#1E3D27' : '#C9A84C',
-      })
-    }
-    return items
-  }, [viewport.width, viewport.height])
-
-  // Optimized MeshTransmissionMaterial for performance while still looking like glass
-  const materialGreen = useMemo(() => <MeshTransmissionMaterial color="#1E3D27" roughness={0.2} thickness={1.5} ior={1.5} transmission={0.9} resolution={256} samples={4} />, [])
-  const materialGold = useMemo(() => <MeshTransmissionMaterial color="#C9A84C" roughness={0.3} thickness={1} ior={1.2} transmission={0.8} resolution={256} samples={4} />, [])
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (groupRef.current) {
-        const scrollY = window.scrollY
-        const maxScroll = document.body.scrollHeight - window.innerHeight
-        const progress = maxScroll > 0 ? scrollY / maxScroll : 0
-        
-        groupRef.current.rotation.y = progress * Math.PI * 0.5
-        groupRef.current.rotation.x = progress * Math.PI * 0.1
-      }
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  useFrame(() => {
-    if (groupRef.current) {
-      // Apply mouse parallax
-      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, mousePosition.x * 0.5, 0.05)
-      groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, mousePosition.y * 0.5, 0.05)
-    }
-  })
 
   return (
     <>
+      <CameraRig />
       <group ref={groupRef}>
-        {shapes.map((shape) => (
-          <Float key={shape.id} speed={2} rotationIntensity={1.5} floatIntensity={2}>
-            <AbstractShape 
-              {...shape} 
-              material={shape.color === '#1E3D27' ? materialGreen : materialGold} 
-            />
-          </Float>
-        ))}
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[5, 10, 5]} intensity={2} color="#C9A84C" />
-        <directionalLight position={[-5, 0, -5]} intensity={1} color="#1E3D27" />
-        <Environment preset="city" />
-        <Particles count={150} />
-        <Grid3D />
+        <HexIris />
+        <VaultWalls />
+        
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[0, 10, 5]} intensity={2} color="#C9A84C" />
+        <directionalLight position={[0, -10, 5]} intensity={1} color="#00FF9D" />
+        <pointLight position={[0, 0, 5]} intensity={1.5} color="#08140C" />
+        
+        <Environment preset="night" />
+        <Particles count={300} />
       </group>
       
       <EffectComposer disableNormalPass>

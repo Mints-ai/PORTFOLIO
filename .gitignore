@@ -23,10 +23,14 @@ dist-ssr
 *.sln
 *.sw?
 
-# Large video files — exceed GitHub's 100MB limit
-# Host these on cloud storage (Drive, S3, Cloudinary, etc.)
+# Large media assets — do NOT commit to git
+# Host on cloud storage (Cloudinary, S3, Google Drive, etc.)
+# Reference via URL in Work.jsx instead of local /public paths
 *.mp4
 *.mov
 *.avi
 *.mkv
 *.webm
+
+# Project image/media folders (large binary assets)
+public/projects/

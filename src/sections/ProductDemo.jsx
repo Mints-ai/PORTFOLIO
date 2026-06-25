@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 import ScrambleText from '../components/ScrambleText'
 import { playLockdownSound, playSuccessSound } from '../lib/synth'
 
-const PRODUCTS = [
+export const PRODUCTS = [
   {
     id: 'shielddesk',
     label: 'SHIELDDESK',
@@ -1129,7 +1129,7 @@ function MinoraSandbox() {
   )
 }
 
-function SandboxModal({ product, onClose }) {
+export function SandboxModal({ product, onClose }) {
   const prefersReducedMotion = usePrefersReducedMotion()
 
   useEffect(() => {
@@ -1148,18 +1148,22 @@ function SandboxModal({ product, onClose }) {
           exit={{ opacity: 0 }}
         >
           {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-bg-deep/90 backdrop-blur-md pointer-events-auto"
+          <motion.div
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
+            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 bg-bg-deep/80 pointer-events-auto"
             onClick={onClose}
           />
 
           {/* Dialog Container */}
           <motion.div
-            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 30 }}
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: 40 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 30 }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 w-full max-w-4xl max-h-[90vh] overflow-y-auto liquid-glass-panel border-glass-border flex flex-col pointer-events-auto shadow-2xl"
+            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 w-full max-w-4xl max-h-[90vh] overflow-y-auto liquid-glass-panel border-glass-border flex flex-col pointer-events-auto shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-3xl bg-bg-deep/50"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 md:px-6 py-4 md:py-5 border-b border-glass-border bg-bg-elevated/40 relative z-20">
@@ -1221,338 +1225,148 @@ function SandboxModal({ product, onClose }) {
   )
 }
 
-function ProductCard({ product, active, setActive, setSandboxProduct, i, prefersReducedMotion }) {
-  const cardRef = useRef(null)
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [6, -6]), { stiffness: 120, damping: 18 })
-  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-6, 6]), { stiffness: 120, damping: 18 })
-  const glowX = useTransform(x, [-0.5, 0.5], [0, 100])
-  const glowY = useTransform(y, [-0.5, 0.5], [0, 100])
-
-  const handleMouseMove = (e) => {
-    if (prefersReducedMotion || !cardRef.current) return
-    const rect = cardRef.current.getBoundingClientRect()
-    x.set((e.clientX - rect.left) / rect.width - 0.5)
-    y.set((e.clientY - rect.top) / rect.height - 0.5)
-  }
-
-  const handleMouseLeave = () => {
-    if (prefersReducedMotion) return
-    x.set(0)
-    y.set(0)
-  }
-
-  const isActive = active?.id === product.id
+function ProductBay({ product, setSandboxProduct, i }) {
+  const containerRef = useRef(null)
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  })
+  
+  const y = useTransform(scrollYProgress, [0, 1], ["20%", "-20%"])
+  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0])
 
   return (
-    <motion.button
-      ref={cardRef}
-      onClick={() => setActive(isActive ? null : product)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      data-cursor="link"
-      initial={prefersReducedMotion ? {} : { opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.7, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
-      className="relative group text-left overflow-hidden transition-all duration-500"
-      style={{
-        background: 'rgba(8,20,12,0.75)',
-        border: `1px solid ${isActive ? product.color + '40' : 'rgba(255,255,255,0.05)'}`,
-        borderRadius: '20px',
-        backdropFilter: 'blur(60px) saturate(200%)',
-        rotateX: prefersReducedMotion ? 0 : rotateX,
-        rotateY: prefersReducedMotion ? 0 : rotateY,
-        transformStyle: 'preserve-3d',
-        boxShadow: isActive
-          ? `0 0 0 1px ${product.color}25, 0 40px 100px -20px rgba(0,0,0,0.8), 0 0 60px -20px ${product.color}20`
-          : '0 20px 60px -16px rgba(0,0,0,0.6)',
-      }}
-    >
-      {/* Colored top border glow on hover */}
-      <div
-        className="absolute top-0 left-0 right-0 h-px transition-opacity duration-500"
-        style={{
-          background: `linear-gradient(90deg, transparent, ${product.color}80, transparent)`,
-          opacity: isActive ? 1 : 0,
-        }}
-      />
+    <div ref={containerRef} className="relative w-full h-[150vh] pointer-events-auto">
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
+        {/* Deep background color */}
+        <div className="absolute inset-0 z-0 bg-bg-deep">
+          {/* Subtle Image Backdrop */}
+          <motion.img 
+            style={{ scale: 1.1, opacity: 0.15 }}
+            src={product.image} 
+            className="w-full h-full object-cover mix-blend-luminosity"
+          />
+          {/* Dynamic Ambient Glow Orb */}
+          <motion.div 
+            style={{ 
+              background: `radial-gradient(circle, ${product.color}40 0%, transparent 70%)`,
+              y: useTransform(scrollYProgress, [0, 1], ["-20%", "20%"])
+            }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[1000px] max-h-[1000px] rounded-full blur-[100px] opacity-40 mix-blend-screen pointer-events-none"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-bg-deep via-transparent to-bg-deep" />
+        </div>
 
-      {/* Corner brackets */}
-      <div className="absolute top-3 left-3 w-4 h-4 border-t border-l transition-all duration-400 opacity-0 group-hover:opacity-100"
-           style={{ borderColor: product.color + '60' }} />
-      <div className="absolute bottom-3 right-3 w-4 h-4 border-b border-r transition-all duration-400 opacity-0 group-hover:opacity-100"
-           style={{ borderColor: product.color + '40' }} />
-
-      {/* Background image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center transition-all duration-700"
-        style={{
-          backgroundImage: `url("${product.image}")`,
-          opacity: isActive ? 0.25 : 0.12,
-          transform: 'scale(1.05)',
-        }}
-      />
-
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-bg-deep/90 via-bg-deep/60 to-transparent" />
-
-      {/* Mouse-follow glow */}
-      <motion.div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{
-          background: prefersReducedMotion ? 'none' : `radial-gradient(circle at ${glowX.get()}% ${glowY.get()}%, ${product.color}15 0%, transparent 60%)`,
-        }}
-      />
-
-      {/* Top-right orb glow */}
-      <div
-        className="absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-0 group-hover:opacity-15 transition-opacity duration-700 blur-3xl pointer-events-none"
-        style={{ background: product.color }}
-      />
-
-      <div className="relative z-10 p-8">
-        {/* Badge row */}
-        <div className="flex items-start justify-between mb-8">
-          <span
-            className="font-number text-7xl font-bold leading-none"
-            style={{ color: product.color, opacity: 0.12 }}
-          >
-            {product.badge}
-          </span>
-          <div className="flex flex-col items-end gap-2">
-            <span
-              className="px-3 py-1.5 rounded-sm border font-mono text-[7px] uppercase tracking-widest"
-              style={{
-                borderColor: product.color + '35',
-                color: product.color,
-                background: product.color + '0D',
-              }}
-            >
-              {product.tagline}
-            </span>
-            {/* Live indicator */}
-            <div className="flex items-center gap-1.5">
-              <span
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ background: product.color, boxShadow: `0 0 6px ${product.color}80`, animation: 'neonPulse 2.5s ease-in-out infinite' }}
-              />
-              <span className="font-mono text-[7px] tracking-widest" style={{ color: product.color + '90' }}>LIVE DEMO</span>
-            </div>
+        {/* Specs Text Sliding Overlay */}
+        <motion.div 
+          style={{ y, opacity }}
+          className="relative z-10 w-full max-w-[1400px] px-6 md:px-16 lg:px-24 flex flex-col md:flex-row gap-8 lg:gap-16 items-center justify-center"
+        >
+          {/* Watermark Badge behind content */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[-1] hidden md:block">
+            <span className="font-number text-[20vw] text-accent-gold/5 leading-none">{product.badge}</span>
           </div>
-        </div>
 
-        {/* Title */}
-        <h3 className="font-display font-bold text-2xl md:text-3xl text-beige-100 mb-3 tracking-tight flex items-center gap-3">
-          {product.label}
-          {product.statusBadge && (
-            <span
-              className="px-2.5 py-0.5 rounded-sm border font-mono text-[8px] uppercase tracking-wider font-semibold"
-              style={{
-                borderColor: product.color + '45',
-                color: product.color,
-                background: product.color + '12',
-              }}
-            >
-              {product.statusBadge}
-            </span>
-          )}
-        </h3>
-        <p className="font-body text-beige-300/70 text-sm leading-relaxed line-clamp-3 mb-6">{product.description}</p>
-
-        {/* Feature pills */}
-        <div className="flex flex-wrap gap-1.5 mb-7">
-          {product.features.map(f => (
-            <span
-              key={f}
-              className="px-2.5 py-1 rounded-sm border font-mono text-[7px] uppercase tracking-wider"
-              style={{
-                borderColor: 'rgba(255,255,255,0.06)',
-                color: 'rgba(185,172,141,0.6)',
-                background: 'rgba(255,255,255,0.025)',
-              }}
-            >
-              {f}
-            </span>
-          ))}
-        </div>
-
-        {/* CTA */}
-        <div className="flex items-center gap-4">
-          <span
-            onClick={(e) => {
-              e.stopPropagation()
-              setSandboxProduct(product)
-            }}
-            data-cursor="link"
-            className="btn-glow flex items-center gap-2.5 !py-3 !px-6 !text-[9px] !rounded-sm"
-            style={{
-              background: `linear-gradient(135deg, ${product.color} 0%, ${product.color}CC 100%)`,
-              color: '#050D08',
-              boxShadow: `0 0 20px ${product.color}40, 0 0 0 1px ${product.color}30`,
-            }}
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="flex-1 flex flex-col gap-6 liquid-glass-panel p-8 md:p-12 border-glass-border backdrop-blur-2xl bg-bg-deep/40 shadow-2xl shadow-black/50 hover:border-accent-gold/30 transition-colors duration-500 relative overflow-hidden group/panel"
           >
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M4.5 6l1.5 1.5L8.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Launch Sandbox
-            <span
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: '#050D08', animation: 'pulseRing 2s ease-out infinite' }}
-            />
-          </span>
-          <span className="font-mono text-[9px] text-beige-300/50 tracking-widest group-hover:text-beige-100/70 transition-colors duration-300">
-            {isActive ? 'Collapse ↑' : 'Details ↓'}
-          </span>
-        </div>
-      </div>
+            {/* Subtle glow on hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-accent-gold/0 via-accent-gold/0 to-accent-gold/5 opacity-0 group-hover/panel:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-      {/* Expanded details */}
-      <AnimatePresence>
-        {isActive && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden"
-          >
-            <div
-              className="relative z-10 px-8 pb-8 pt-6 flex flex-col gap-4"
-              style={{ borderTop: `1px solid ${product.color}20` }}
+            <div className="flex items-center gap-4 relative z-10">
+              <span className="font-number text-5xl md:text-6xl text-accent-gold opacity-80 drop-shadow-[0_0_15px_rgba(201,168,76,0.3)]">{product.badge}</span>
+              <div className="flex flex-col">
+                <span className="font-mono text-[10px] text-accent-gold tracking-widest uppercase">{product.tagline}</span>
+                <h3 className="font-display text-3xl md:text-5xl font-bold text-white uppercase tracking-tight">{product.label}</h3>
+              </div>
+            </div>
+            
+            <p className="font-body text-beige-300 text-base md:text-lg max-w-xl relative z-10 leading-relaxed">
+              {product.description}
+            </p>
+
+            <div className="flex flex-wrap gap-2 mt-2 relative z-10">
+              {product.features.map(f => (
+                <span key={f} className="px-3 py-1.5 border border-white/10 bg-black/40 font-mono text-[9px] uppercase tracking-wider text-beige-100 hover:border-accent-gold/40 hover:text-accent-gold transition-colors cursor-default">
+                  {f}
+                </span>
+              ))}
+            </div>
+
+            <button 
+              onClick={() => setSandboxProduct(product)}
+              className="mt-6 self-start group relative overflow-hidden border border-accent-gold bg-transparent px-8 py-4 font-mono text-[10px] tracking-widest uppercase text-accent-gold transition-all duration-300 hover:scale-105"
             >
-              <p className="font-mono text-[8px] uppercase tracking-widest" style={{ color: product.color + '90' }}>Platform Architecture Preview</p>
-              <div
-                className="w-full aspect-video rounded-xl bg-cover bg-center border opacity-70"
-                style={{
-                  backgroundImage: `url("${product.image}")`,
-                  borderColor: product.color + '20',
-                }}
-              />
+              <div className="absolute inset-0 bg-accent-gold translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <span className="relative z-10 group-hover:text-bg-deep font-bold transition-colors duration-300 flex items-center gap-3">
+                Access Console
+                <span className="w-1.5 h-1.5 rounded-full bg-accent-gold group-hover:bg-bg-deep animate-pulse" />
+              </span>
+            </button>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+            className="flex-1 w-full flex items-center justify-center md:-ml-8 lg:-ml-16 z-20"
+          >
+            <div className="relative w-full max-w-[600px] aspect-video border border-white/20 liquid-glass-panel p-2 flex flex-col gap-2 bg-black/40 backdrop-blur-md shadow-2xl shadow-black/80 group">
+              <div className="flex justify-between items-center px-3 py-1 border-b border-white/5">
+                <span className="font-mono text-[9px] text-beige-300 uppercase tracking-widest flex items-center gap-2">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                  System Preview
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse shadow-[0_0_8px_#00FF9D]" />
+              </div>
+              <div className="flex-1 border border-white/10 bg-black/60 overflow-hidden relative">
+                <img src={product.image} className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-1000 ease-out" />
+                <div className="absolute inset-0 bg-accent-gold/10 mix-blend-overlay pointer-events-none group-hover:opacity-0 transition-opacity duration-1000" />
+                {/* Scanner line effect */}
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-accent-gold/50 shadow-[0_0_10px_rgba(201,168,76,0.8)] -translate-y-full group-hover:animate-scan pointer-events-none" />
+              </div>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.button>
+        </motion.div>
+      </div>
+    </div>
   )
 }
 
 export default function ProductDemo() {
-  const [active, setActive] = useState(null)
   const [sandboxProduct, setSandboxProduct] = useState(null)
-  const prefersReducedMotion = usePrefersReducedMotion()
 
   return (
-    <section id="products" className="relative z-10 py-28 px-6 md:px-16 lg:px-24 pointer-events-auto overflow-hidden">
-      <div className="grid-overlay opacity-30 pointer-events-none" />
-
-      {/* Accent orb background */}
-      <div
-        className="absolute top-1/2 right-0 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none opacity-[0.025]"
-        style={{ background: 'radial-gradient(circle, rgba(201,168,76,1) 0%, transparent 60%)' }}
-      />
-      <div
-        className="absolute bottom-0 left-10 w-[300px] h-[300px] rounded-full pointer-events-none opacity-[0.02]"
-        style={{ background: 'radial-gradient(circle, rgba(0,255,157,1) 0%, transparent 60%)' }}
-      />
-
-      {/* ── Section Header ── */}
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-          <div>
-            <div className="section-label mb-5">Enterprise Platforms</div>
-            <h2 className="font-display font-extrabold text-beige-100 leading-[0.92] tracking-tight" style={{ fontSize: 'clamp(2.8rem, 6.5vw, 5.5rem)' }}>
-              <div className="overflow-hidden">
-                <motion.div
-                  initial={prefersReducedMotion ? {} : { y: '100%' }}
-                  whileInView={{ y: '0%' }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.85, ease: [0.16,1,0.3,1] }}
-                >
-                  <ScrambleText text="Our Digital" delay={150} duration={900} />
-                </motion.div>
-              </div>
-              <div className="overflow-hidden">
-                <motion.div
-                  initial={prefersReducedMotion ? {} : { y: '100%' }}
-                  whileInView={{ y: '0%' }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.85, delay: 0.12, ease: [0.16,1,0.3,1] }}
-                  className="text-shimmer"
-                >
-                  <ScrambleText text="Products." delay={300} duration={850} />
-                </motion.div>
-              </div>
-            </h2>
+    <section id="products" className="relative z-10 w-full flex flex-col pointer-events-auto bg-bg-deep">
+      
+      {/* Header */}
+      <div className="sticky top-0 z-20 w-full px-6 md:px-16 lg:px-24 pt-24 pb-8 bg-gradient-to-b from-bg-deep to-transparent pointer-events-none">
+        <div className="max-w-[1400px] w-full mx-auto flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <span className="w-2 h-2 rounded-full bg-accent-gold animate-pulse" />
+            <span className="font-mono text-[10px] tracking-widest uppercase text-accent-gold">Level 02 // Live Ops</span>
           </div>
-
-          <div className="max-w-sm">
-            <p className="font-body text-beige-300/70 text-base leading-relaxed mb-4">
-              Beyond client work, Mints Global engineers scalable enterprise platforms tailored for distinct industry verticals.
-            </p>
-            {/* Product count badge */}
-            <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-sm"
-                 style={{ border: '1px solid rgba(201,168,76,0.2)', background: 'rgba(201,168,76,0.05)' }}>
-              <span className="font-number text-2xl font-bold text-accent-gold leading-none">{PRODUCTS.length}</span>
-              <div className="font-mono text-[8px] uppercase tracking-widest text-beige-300/50">
-                <div>Active</div>
-                <div>Products</div>
-              </div>
-            </div>
-          </div>
+          <h2 className="font-display text-4xl md:text-6xl font-bold tracking-tight text-white uppercase">
+            Active <span className="text-shimmer">Consoles</span>
+          </h2>
         </div>
+      </div>
 
-        {/* ── Product Cards Grid ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-14">
-          {PRODUCTS.map((product, i) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              active={active}
-              setActive={setActive}
-              setSandboxProduct={setSandboxProduct}
-              i={i}
-              prefersReducedMotion={prefersReducedMotion}
-            />
-          ))}
-        </div>
-
-        {/* ── Bottom CTA strip — enhanced ── */}
-        <motion.div
-          initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="relative rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, rgba(201,168,76,0.07) 0%, rgba(8,20,12,0.8) 60%, rgba(0,255,157,0.04) 100%)',
-            border: '1px solid rgba(201,168,76,0.2)',
-          }}
-        >
-          {/* Accent lines */}
-          <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, rgba(201,168,76,0.5), rgba(0,255,157,0.3), transparent)' }} />
-          <div className="absolute top-3 left-3 w-5 h-5 border-t border-l border-accent-gold/40" />
-          <div className="absolute bottom-3 right-3 w-5 h-5 border-b border-r border-accent-gold/25" />
-
-          <div className="relative z-10">
-            <p className="font-mono text-[8px] uppercase tracking-widest text-accent-gold mb-3">Enterprise Solutions</p>
-            <h3 className="font-display font-bold text-2xl md:text-3xl text-beige-100 mb-2">Interested in a custom enterprise build?</h3>
-            <p className="font-body text-beige-300/60 text-sm font-light max-w-md">Our team can architect bespoke software tailored to your organisation's unique workflows.</p>
-          </div>
-          <div className="relative z-10 flex flex-col sm:flex-row gap-3 shrink-0">
-            <a
-              href="https://www.mintsglobal.ae/#contact"
-              target="_blank"
-              rel="noopener noreferrer"
-              data-cursor="link"
-              className="btn-glow btn-glow-gold"
-            >
-              Talk to Us ↗
-            </a>
-          </div>
-        </motion.div>
+      {/* Product Bays */}
+      <div className="w-full flex flex-col relative z-10 mt-[-100px]">
+        {PRODUCTS.map((product, i) => (
+          <ProductBay
+            key={product.id}
+            product={product}
+            setSandboxProduct={setSandboxProduct}
+            i={i}
+          />
+        ))}
       </div>
 
       {/* Interactive Sandbox Overlay Modal */}

@@ -159,3 +159,72 @@ export function playSuccessSound() {
     // Ignore warnings
   }
 }
+
+/**
+ * Play a low mechanical confirm tone for ACCESS GRANTED
+ */
+export function playGrantedSound() {
+  if (isMuted) return
+  try {
+    const ctx = getAudioContext()
+    if (ctx.state === 'suspended') return
+
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc.type = 'square'
+    osc.frequency.setValueAtTime(164.81, ctx.currentTime) // E3
+    osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.3)
+
+    gain.gain.setValueAtTime(0.015, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4)
+
+    const filter = ctx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.setValueAtTime(800, ctx.currentTime)
+
+    osc.connect(filter)
+    filter.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.start()
+    osc.stop(ctx.currentTime + 0.4)
+  } catch {
+    // Ignore warnings
+  }
+}
+
+/**
+ * Play a heavy mechanical clunk for vault transitions
+ */
+export function playTransitionSound() {
+  if (isMuted) return
+  try {
+    const ctx = getAudioContext()
+    if (ctx.state === 'suspended') return
+
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc.type = 'sawtooth'
+    osc.frequency.setValueAtTime(55, ctx.currentTime) // A1
+    osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.2)
+
+    gain.gain.setValueAtTime(0.02, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3)
+
+    const filter = ctx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.setValueAtTime(400, ctx.currentTime)
+    filter.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.2)
+
+    osc.connect(filter)
+    filter.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.start()
+    osc.stop(ctx.currentTime + 0.3)
+  } catch {
+    // Ignore warnings
+  }
+}
