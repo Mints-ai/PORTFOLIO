@@ -1318,7 +1318,14 @@ function ProductBay({ product, setSandboxProduct, i }) {
             <div className="flex items-center gap-4 relative z-10">
               <span className="font-number text-5xl md:text-6xl text-accent-gold opacity-80 drop-shadow-[0_0_15px_rgba(201,168,76,0.3)]">{product.badge}</span>
               <div className="flex flex-col">
-                <span className="font-mono text-[10px] text-accent-gold tracking-widest uppercase">{product.tagline}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[10px] text-accent-gold tracking-widest uppercase">{product.tagline}</span>
+                  {product.statusBadge && (
+                    <span className="px-2 py-0.5 border border-accent-gold/50 text-[8px] tracking-widest uppercase text-accent-gold bg-accent-gold/10 rounded-sm shadow-[0_0_10px_rgba(201,168,76,0.2)]">
+                      {product.statusBadge}
+                    </span>
+                  )}
+                </div>
                 <h3 className="font-display text-3xl md:text-5xl font-bold text-white uppercase tracking-tight">
                   <ScrambleText text={product.label} />
                 </h3>
