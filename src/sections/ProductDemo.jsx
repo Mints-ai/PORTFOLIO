@@ -1321,7 +1321,7 @@ function ProductBay({ product, setSandboxProduct, i }) {
                 <div className="flex items-center gap-3">
                   <span className="font-mono text-[10px] text-accent-gold tracking-widest uppercase">{product.tagline}</span>
                   {product.statusBadge && (
-                    <span className="px-2 py-0.5 border border-accent-gold/50 text-[8px] tracking-widest uppercase text-accent-gold bg-accent-gold/10 rounded-sm shadow-[0_0_10px_rgba(201,168,76,0.2)]">
+                    <span className="px-3 py-1 bg-accent-gold text-bg-deep font-bold text-[10px] md:text-xs tracking-widest uppercase rounded shadow-[0_0_20px_rgba(201,168,76,0.5)] animate-pulse">
                       {product.statusBadge}
                     </span>
                   )}
