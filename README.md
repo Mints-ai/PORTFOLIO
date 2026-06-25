@@ -1,16 +1,54 @@
-# React + Vite
+# Mints Global Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An ultra-premium, interactive digital agency portfolio built to showcase high-end case studies and projects across Web Development, Social Media Management, Branding, Video & Motion, and Designs. 
 
-Currently, two official plugins are available:
+The platform is designed with a cutting-edge aesthetic featuring immersive micro-animations, GSAP-powered transitions, and magnetic user interfaces.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Technologies Used
 
-## React Compiler
+- **React 19**
+- **Vite**
+- **Tailwind CSS**
+- **Framer Motion** & **GSAP** (for advanced animations and scroll-triggered physics)
+- **Three.js** & **React Three Fiber** (for WebGL immersive experiences)
+- **Zustand** (for state management)
+- **Lucide React** (for modern SVG iconography)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📦 Installation & Setup
 
-## Expanding the ESLint configuration
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Mints-ai/PORTFOLIO.git
+   cd PORTFOLIO/studio-site
+   ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+
+4. **Build for production:**
+   ```bash
+   npm run build
+   ```
+
+## 🎨 Key Features
+
+- **Dynamic Interactive Consoles:** Custom-built project display bays with sticky navigation.
+- **Cybernetic Micro-UI:** Embedded SVG visualizers and tracking elements.
+- **Magnetic Buttons:** Custom cursor-following physics using Framer Motion.
+- **Performance Optimized:** Uses `requestAnimationFrame` hooks and tailored CSS containment for buttery-smooth 60fps scrolling experiences.
+
+## 📄 License & Copyright
+
+**Copyright (c) 2026 Mints Global (mintsglobal.ae)**
+**All Rights Reserved.**
+
+This project and its original content, features, and functionality are owned by Mints Global and are protected by international copyright, trademark, patent, trade secret, and other intellectual property or proprietary rights laws.
+
+You may not reproduce, distribute, modify, create derivative works of, publicly display, publicly perform, republish, download, store, or transmit any of the material in this repository without the prior written consent of Mints Global.
