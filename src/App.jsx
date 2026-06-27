@@ -197,7 +197,7 @@ function App() {
           <ErrorBoundary>
             <Canvas
               camera={{ position: [0, 0, 10], fov: 35 }}
-              dpr={[1, 2]}
+              dpr={[1, 1.5]}
               gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
             >
               <Suspense fallback={null}>

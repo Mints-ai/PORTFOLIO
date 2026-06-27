@@ -60,8 +60,8 @@ function SceneContents() {
     return items
   }, [viewport.width, viewport.height, prefersReducedMotion])
 
-  const materialBeige = useMemo(() => <MeshTransmissionMaterial color="#F4ECDC" roughness={0.2} thickness={1} ior={1.2} transmission={0.9} />, [])
-  const materialGold = useMemo(() => <MeshTransmissionMaterial color="#C9A84C" roughness={0.2} thickness={1} ior={1.2} transmission={0.9} />, [])
+  const materialBeige = useMemo(() => <MeshTransmissionMaterial color="#F4ECDC" roughness={0.2} thickness={1} ior={1.2} transmission={0.9} resolution={256} samples={4} />, [])
+  const materialGold = useMemo(() => <MeshTransmissionMaterial color="#C9A84C" roughness={0.2} thickness={1} ior={1.2} transmission={0.9} resolution={256} samples={4} />, [])
 
   useFrame(() => {
     if (!groupRef.current) return
@@ -109,7 +109,7 @@ export default function AmbientScene() {
     <div className="fixed inset-0 z-0 pointer-events-none bg-bg-deep">
       <Canvas
         camera={{ position: [0, 0, 10], fov: 45 }}
-        dpr={[1, 2]}
+        dpr={[1, 1.5]}
         gl={{ antialias: true, alpha: true }}
       >
         <SceneContents />

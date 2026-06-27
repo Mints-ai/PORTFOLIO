@@ -169,7 +169,7 @@ export default function SceneJourney() {
       
       <EffectComposer disableNormalPass>
         <Bloom luminanceThreshold={0.2} mipmapBlur intensity={1.5} />
-        <DepthOfField focusDistance={0} focalLength={0.02} bokehScale={2} height={480} />
+        <DepthOfField focusDistance={0} focalLength={0.02} bokehScale={2} height={300} />
       </EffectComposer>
     </>
   )
