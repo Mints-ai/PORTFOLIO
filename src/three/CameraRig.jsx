@@ -17,8 +17,7 @@ const WAYPOINTS = [
 ]
 
 export default function CameraRig() {
-  const { camera } = useThree()
-  const { cameraProgress, accessGranted, activeBay } = useVaultStore()
+  const { accessGranted, activeBay } = useVaultStore()
   
   // Create persistent objects to avoid instantiation in useFrame
   const currentPos = useRef(new THREE.Vector3(0, 0, 6))
@@ -44,6 +43,8 @@ export default function CameraRig() {
 
   // Process waypoints
   useFrame((state, delta) => {
+    const cameraProgress = useVaultStore.getState().cameraProgress
+    
     // 1. Base interpolation from waypoints
     let wpStart = WAYPOINTS[0]
     let wpEnd = WAYPOINTS[WAYPOINTS.length - 1]
@@ -104,10 +105,10 @@ export default function CameraRig() {
     currentPos.current.lerp(targetPos.current, 0.05)
     currentLookAt.current.lerp(targetLookAt.current, 0.05)
     
-    camera.position.copy(currentPos.current)
-    camera.lookAt(currentLookAt.current)
-    camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.05)
-    camera.updateProjectionMatrix()
+    state.camera.position.copy(currentPos.current)
+    state.camera.lookAt(currentLookAt.current)
+    state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, targetFov, 0.05)
+    state.camera.updateProjectionMatrix()
   })
 
   return null

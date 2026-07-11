@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect, useRef } from 'react'
+import { Helmet } from 'react-helmet-async'
 import { Canvas } from '@react-three/fiber'
 import { ReactLenis } from 'lenis/react'
 import gsap from 'gsap'
@@ -12,11 +13,11 @@ import Spotlight from './components/Spotlight'
 import Navbar from './components/Navbar'
 
 import Hero from './sections/Hero'
-import Work from './sections/Work'
-import ProductDemo from './sections/ProductDemo'
-import SignalLog from './sections/SignalLog'
-import Contact from './sections/Contact'
-import Footer from './sections/Footer'
+const Work = lazy(() => import('./sections/Work'))
+const ProductDemo = lazy(() => import('./sections/ProductDemo'))
+const SignalLog = lazy(() => import('./sections/SignalLog'))
+const Contact = lazy(() => import('./sections/Contact'))
+const Footer = lazy(() => import('./sections/Footer'))
 import { playHoverSound, playClickSound } from './lib/synth'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -184,6 +185,13 @@ function App() {
 
   return (
     <ReactLenis root options={{ lerp: 0.05, smoothWheel: true }}>
+      <Helmet>
+        <title>Mints Global — Works & Product Showcase</title>
+        <meta name="description" content="An interactive archive of experimental product demos, branding, and web development projects by Mints Global." />
+        <meta property="og:title" content="Mints Global — Works & Product Showcase" />
+        <meta property="og:description" content="An interactive archive of experimental product demos, branding, and web development projects by Mints Global." />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <div ref={containerRef} className="relative w-full min-h-screen overflow-x-hidden cursor-none bg-bg-deep">
         <NoiseOverlay />
         <Spotlight />
@@ -212,19 +220,21 @@ function App() {
           <div id="hero" className="vault-level min-h-screen pointer-events-auto" data-level="AUTH" data-sector="SEC-00">
             <Hero />
           </div>
-          <div id="work-anchor" className="vault-level pointer-events-auto" data-level="CASE_FILES" data-sector="SEC-01">
-            <Work />
-          </div>
-          <div id="products-anchor" className="vault-level pointer-events-auto" data-level="LIVE_OPS" data-sector="SEC-02">
-            <ProductDemo />
-          </div>
-          <div id="signal-anchor" className="vault-level pointer-events-auto" data-level="SIGNAL_LOG" data-sector="SEC-03">
-            <SignalLog />
-          </div>
-          <div id="contact" className="vault-level pointer-events-auto" data-level="UPLINK" data-sector="SEC-04">
-            <Contact />
-          </div>
-          <Footer />
+          <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-neon-green font-mono text-sm opacity-50">INITIALIZING SECTORS...</div>}>
+            <div id="work-anchor" className="vault-level pointer-events-auto" data-level="CASE_FILES" data-sector="SEC-01">
+              <Work />
+            </div>
+            <div id="products-anchor" className="vault-level pointer-events-auto" data-level="LIVE_OPS" data-sector="SEC-02">
+              <ProductDemo />
+            </div>
+            <div id="signal-anchor" className="vault-level pointer-events-auto" data-level="SIGNAL_LOG" data-sector="SEC-03">
+              <SignalLog />
+            </div>
+            <div id="contact" className="vault-level pointer-events-auto" data-level="UPLINK" data-sector="SEC-04">
+              <Contact />
+            </div>
+            <Footer />
+          </Suspense>
         </div>
       </div>
     </ReactLenis>

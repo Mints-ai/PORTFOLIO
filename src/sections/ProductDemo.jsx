@@ -1403,7 +1403,7 @@ function ProductBay({ product, setSandboxProduct, i }) {
                 <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse shadow-[0_0_8px_#00FF9D]" />
               </div>
               <div className="flex-1 border border-white/10 bg-black/60 overflow-hidden relative">
-                <img src={product.image} className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-1000 ease-out" />
+                <img src={product.image} className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-1000 ease-out" loading="lazy" decoding="async" />
                 <div className="absolute inset-0 bg-accent-gold/10 mix-blend-overlay pointer-events-none group-hover:opacity-0 transition-opacity duration-1000" />
                 {/* Scanner line effect */}
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-accent-gold/50 shadow-[0_0_10px_rgba(201,168,76,0.8)] -translate-y-full group-hover:animate-scan pointer-events-none" />

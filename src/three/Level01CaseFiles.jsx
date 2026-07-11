@@ -29,7 +29,7 @@ export default function Level01CaseFiles() {
                 }}
               >
                 <div className="w-full h-32 relative overflow-hidden">
-                  <img src={project.image} className="w-full h-full object-cover grayscale opacity-60 hover:grayscale-0 hover:opacity-100" />
+                  <img src={project.image} className="w-full h-full object-cover grayscale opacity-60 hover:grayscale-0 hover:opacity-100" loading="lazy" decoding="async" />
                 </div>
                 <div className="mt-2 text-[10px] font-mono text-beige-100 uppercase truncate">
                   {project.title}

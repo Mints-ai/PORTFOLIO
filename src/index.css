@@ -57,6 +57,7 @@
   .liquid-glass-panel {
     position: relative;
     overflow: hidden;
+    will-change: transform;
     border-radius: 16px;
     border: 1px solid var(--glass-border);
     background: var(--glass-fill);
@@ -371,6 +372,7 @@
   .stat-card {
     position: relative;
     padding: 20px 24px;
+    will-change: transform;
     border: 1px solid var(--glass-border);
     background: rgba(8,20,12,0.7);
     backdrop-filter: blur(40px);
@@ -391,6 +393,7 @@
   .holo-card {
     position: relative;
     overflow: hidden;
+    will-change: transform;
     transition: transform 0.5s, box-shadow 0.5s;
   }
   .holo-card::after {
@@ -416,6 +419,7 @@
   .product-card-cyber {
     position: relative;
     border: 1px solid var(--glass-border);
+    will-change: transform;
     background: var(--glass-fill);
     backdrop-filter: blur(60px) saturate(200%);
     transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
@@ -437,6 +441,7 @@
   .work-card {
     position: relative;
     overflow: hidden;
+    will-change: transform;
     border: 1px solid rgba(255,255,255,0.04);
     transition: border-color 0.4s, box-shadow 0.4s;
   }

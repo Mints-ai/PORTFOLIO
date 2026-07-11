@@ -123,7 +123,7 @@ export default function Testimonials() {
                   
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full overflow-hidden border border-glass-border">
-                      <img src={testimonial.avatar} alt={testimonial.name} className="w-full h-full object-cover" />
+                      <img src={testimonial.avatar} alt={testimonial.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     </div>
                     <div>
                       <h4 className="font-display text-lg text-beige-100">{testimonial.name}</h4>

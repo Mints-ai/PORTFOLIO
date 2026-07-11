@@ -89,6 +89,7 @@ function DossierCard({ project, onClick }) {
             alt={project.title}
             className="w-full h-full object-cover transition-all duration-700"
             loading="lazy"
+            decoding="async"
           />
         )}
       </div>
@@ -146,7 +147,7 @@ export function ProjectModal({ project, isOpen, onClose }) {
                 {project.video ? (
                   <video src={project.video} className="w-full h-full object-contain" autoPlay muted loop playsInline controls />
                 ) : (
-                  <img src={project.image} alt={project.title} className="w-full h-full object-contain" />
+                  <img src={project.image} alt={project.title} className="w-full h-full object-contain" loading="lazy" decoding="async" />
                 )}
               </div>
               <div className="w-full md:w-1/3 p-8 flex flex-col gap-8 bg-bg-deep/80 border-l border-white/5">
