@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence, useScroll } from 'framer-motion'
 import { getMuted, setMuted } from '../lib/synth'
+import { useVaultStore } from '../store/useVaultStore'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('hero')
   const [muted, setMutedState] = useState(getMuted())
+  const { reducedMotion, toggleReducedMotion } = useVaultStore()
 
   const toggleMute = () => {
     const nextMuted = !muted
@@ -147,6 +149,14 @@ export default function Navbar() {
           )}
         </button>
 
+        <button
+          onClick={toggleReducedMotion}
+          className="text-beige-300 hover:text-accent-gold transition-colors font-mono text-[9px] uppercase tracking-widest flex items-center gap-2"
+          data-cursor="link"
+        >
+          {reducedMotion ? 'MOTION: OFF' : 'MOTION: ON'}
+        </button>
+
         <a
           href="https://www.mintsglobal.ae"
           target="_blank"
@@ -238,6 +248,13 @@ export default function Navbar() {
                   <span>Muted</span>
                 </>
               )}
+            </button>
+            <button
+              onClick={toggleReducedMotion}
+              className="text-beige-300 hover:text-accent-gold transition-colors font-mono text-[9px] uppercase tracking-widest flex items-center gap-3 py-2 pl-4"
+              data-cursor="link"
+            >
+              {reducedMotion ? 'MOTION: OFF' : 'MOTION: ON'}
             </button>
             <div className="h-px bg-glass-border mt-1" />
             <a

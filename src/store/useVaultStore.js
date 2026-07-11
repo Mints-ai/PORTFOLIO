@@ -8,6 +8,7 @@ export const useVaultStore = create((set) => ({
   cameraProgress: 0,
   scrollVelocity: 0,
   activeBay: null, // Track focused console bay in Level 02
+  reducedMotion: typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false,
   setLevel: (level) => set({ level }),
   setDepth: (depth) => set({ depth }),
   setSectorId: (sectorId) => set({ sectorId }),
@@ -15,4 +16,5 @@ export const useVaultStore = create((set) => ({
   setCameraProgress: (progress) => set({ cameraProgress: progress }),
   setScrollVelocity: (velocity) => set({ scrollVelocity: velocity }),
   setActiveBay: (bayId) => set({ activeBay: bayId }),
+  toggleReducedMotion: () => set((state) => ({ reducedMotion: !state.reducedMotion })),
 }))

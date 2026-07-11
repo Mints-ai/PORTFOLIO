@@ -43,7 +43,7 @@ export default function CameraRig() {
 
   // Process waypoints
   useFrame((state, delta) => {
-    const cameraProgress = useVaultStore.getState().cameraProgress
+    const { cameraProgress, reducedMotion } = useVaultStore.getState()
     
     // 1. Base interpolation from waypoints
     let wpStart = WAYPOINTS[0]
@@ -91,23 +91,29 @@ export default function CameraRig() {
     }
 
     // 3. Modifiers: Parallax and Bobbing
-    if (accessGranted && !isMobile) {
+    if (accessGranted && !isMobile && !reducedMotion) {
       targetPos.current.x += mousePosition.x * 0.18
       targetPos.current.y += mousePosition.y * 0.12
     }
     
     // Signal Log (Level 03) Bobbing (active around progress 0.70 to 0.85)
-    if (cameraProgress >= 0.7 && cameraProgress <= 0.85) {
+    if (cameraProgress >= 0.7 && cameraProgress <= 0.85 && !reducedMotion) {
       targetPos.current.y += Math.sin(state.clock.elapsedTime * 1.5) * 0.15
     }
 
     // 4. Smooth Application
-    currentPos.current.lerp(targetPos.current, 0.05)
-    currentLookAt.current.lerp(targetLookAt.current, 0.05)
+    if (reducedMotion) {
+      currentPos.current.copy(targetPos.current)
+      currentLookAt.current.copy(targetLookAt.current)
+      state.camera.fov = targetFov
+    } else {
+      currentPos.current.lerp(targetPos.current, 0.05)
+      currentLookAt.current.lerp(targetLookAt.current, 0.05)
+      state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, targetFov, 0.05)
+    }
     
     state.camera.position.copy(currentPos.current)
     state.camera.lookAt(currentLookAt.current)
-    state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, targetFov, 0.05)
     state.camera.updateProjectionMatrix()
   })
 

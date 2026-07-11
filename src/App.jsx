@@ -12,6 +12,7 @@ import NoiseOverlay from './components/NoiseOverlay'
 import Spotlight from './components/Spotlight'
 import Navbar from './components/Navbar'
 
+import Preloader from './components/Preloader'
 import Hero from './sections/Hero'
 const Work = lazy(() => import('./sections/Work'))
 const ProductDemo = lazy(() => import('./sections/ProductDemo'))
@@ -113,7 +114,7 @@ class ErrorBoundary extends React.Component {
 
 function App() {
   const containerRef = useRef(null)
-  const { setLevel, setSectorId, accessGranted } = useVaultStore()
+  const { setLevel, setSectorId, accessGranted, reducedMotion } = useVaultStore()
 
   useEffect(() => {
     // Lock scroll until iris opens
@@ -184,8 +185,10 @@ function App() {
   }, [setLevel, setSectorId])
 
   return (
-    <ReactLenis root options={{ lerp: 0.05, smoothWheel: true }}>
-      <Helmet>
+    <>
+      <Preloader />
+      <ReactLenis root options={{ lerp: reducedMotion ? 1 : 0.05, smoothWheel: !reducedMotion }}>
+        <Helmet>
         <title>Mints Global — Works & Product Showcase</title>
         <meta name="description" content="An interactive archive of experimental product demos, branding, and web development projects by Mints Global." />
         <meta property="og:title" content="Mints Global — Works & Product Showcase" />
@@ -236,8 +239,9 @@ function App() {
             <Footer />
           </Suspense>
         </div>
-      </div>
-    </ReactLenis>
+        </div>
+      </ReactLenis>
+    </>
   )
 }
 
